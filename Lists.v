@@ -308,52 +308,11 @@ Proof.
   Case "l1 = cons".
     simpl. rewrite -> IHl1'. reflexivity. Qed.
 
-Fixpoint rev (l:natlist):natlist :=
+(*Fixpoint rev (l:natlist):natlist :=
   match l with
   |nil=>nil
   |h::t=>rev t++cons h nil
-end.
-
-
-SearchAbout rev.
-
-Theorem app_nil_end : ∀l : natlist,
-  l ++ [] = l.
-Proof.
- intros l. induction l as [|n l'].
-  Case "l=[]". simpl. reflexivity.
-  Case "l= n::l'".
-    simpl. rewrite -> IHl'. reflexivity. Qed.
-
-Theorem rev_id :∀n:nat,rev [n]=[n].
-Proof. intros n. simpl. reflexivity. Qed.
-
-Theorem rev_dist :∀l1 l2:natlist,
-rev(l1++l2)=rev l2++rev l1.
-Proof. intros l1 l2. induction l1 as [|n l1'].
-  Case "l1=[]". simpl. rewrite->app_nil_end. reflexivity.
-  Case "l1=n::l1'".
- simpl. rewrite->IHl1'. rewrite->app_ass. reflexivity. Qed.
-
-Theorem rev_involutive : ∀l : natlist,
-  rev (rev l) = l.
-Proof.
- intros l. induction l as [|n l'].
- Case"l=[]". simpl. reflexivity.
- Case"l=n::l'".
- simpl. 
- rewrite->rev_dist. rewrite->IHl'. simpl. reflexivity. Qed.
-
-Theorem distr_rev : ∀l1 l2 : natlist,
-  rev (l1 ++ l2) = (rev l2) ++ (rev l1).
-Proof.
-  intros l1 l2. rewrite->rev_dist. reflexivity. Qed.
-
-Theorem app_ass4 : ∀l1 l2 l3 l4 : natlist,
-  l1 ++ (l2 ++ (l3 ++ l4)) = ((l1 ++ l2) ++ l3) ++ l4.
-Proof.
-  intros l1 l2 l3 l4.
- rewrite->app_ass. rewrite->app_ass. reflexivity. Qed.
+end.*)
 
 Fixpoint snoc (l:natlist) (v:nat) : natlist := 
   match l with
@@ -364,11 +323,11 @@ Fixpoint snoc (l:natlist) (v:nat) : natlist :=
 (** ... and use it to define a list-reversing function [rev]
     like this: *)
 
-(*Fixpoint rev (l:natlist) : natlist := 
+Fixpoint rev (l:natlist) : natlist := 
   match l with
   | nil    => nil
   | h :: t => snoc (rev t) h
-  end.*)
+  end.
 
 Example test_rev1:            rev [1,2,3] = [3,2,1].
 Proof. reflexivity.  Qed.
@@ -386,7 +345,7 @@ Theorem rev_length_firsttry : forall l : natlist,
 Proof.
   intros l. induction l as [| n l'].
   Case "l = []".
-    reflexivity.
+    simpl. reflexivity.
   Case "l = n :: l'".
     (* This is the tricky case.  Let's begin as usual by simplifying. *)
     simpl. 
@@ -490,8 +449,109 @@ Proof.
     present purposes. *)
 
 
-Theorem snoc_append : ∀(l:natlist) (n:nat),
+Theorem snoc_append : ∀l:natlist, ∀n:nat,
   snoc l n = l ++ [n].
 Proof.
+  intros l n. induction l as [|n' l'].
+  Case "l=[]". simpl. reflexivity.
+  Case "l=n'::l'". simpl. rewrite <- IHl'. reflexivity. Qed.
 
+
+SearchAbout rev.
+
+Theorem app_nil_end : ∀l : natlist,
+  l ++ [] = l.
+Proof.
+ intros l. induction l as [|n l'].
+  Case "l=[]". simpl. reflexivity.
+  Case "l= n::l'".
+    simpl. rewrite -> IHl'. reflexivity. Qed.
+
+Theorem rev_id :∀n:nat,rev [n]=[n].
+Proof. intros n. simpl. reflexivity. Qed.
+
+
+Theorem rev_dist :∀l1 l2:natlist,
+rev(l1++l2)=rev l2++rev l1.
+Proof. intros l1 l2. induction l1 as [|n l1'].
+  Case "l1=[]". simpl. rewrite->app_nil_end. reflexivity.
+  Case "l1=n::l1'".
+  simpl. rewrite->IHl1'. 
+  rewrite->snoc_append. rewrite->snoc_append. 
+  rewrite->app_ass. reflexivity. Qed.
+
+
+Theorem rev_involutive : ∀l : natlist,
+  rev (rev l) = l.
+Proof.
+ intros l. induction l as [|n l'].
+ Case"l=[]". simpl. reflexivity.
+ Case"l=n::l'".
+ simpl. rewrite->snoc_append. 
+ rewrite->rev_dist. rewrite->IHl'. simpl. reflexivity. Qed.
+
+Theorem distr_rev : ∀l1 l2 : natlist,
+  rev (l1 ++ l2) = (rev l2) ++ (rev l1).
+Proof.
+  intros l1 l2. rewrite->rev_dist. reflexivity. Qed.
+
+Theorem app_ass4 : ∀l1 l2 l3 l4 : natlist,
+  l1 ++ (l2 ++ (l3 ++ l4)) = ((l1 ++ l2) ++ l3) ++ l4.
+Proof.
+  intros l1 l2 l3 l4.
+ rewrite->app_ass. rewrite->app_ass. reflexivity. Qed.
+
+Lemma nonzeros_length : ∀l1 l2 : natlist,
+  nonzeros (l1 ++ l2) = (nonzeros l1) ++ (nonzeros l2).
+Proof.
+  intros l1 l2. induction l1 as [|n l1'].
+  Case "l1=[]". simpl. reflexivity.
+  Case "l1=n::l1'". induction n.
+    SCase "n=0". simpl. rewrite->IHl1'. reflexivity.
+    SCase "n=Sn". simpl. rewrite->IHl1'. reflexivity. Qed.
+
+Theorem cons_snoc_append:∀l1 l2:natlist,∀n1 n2:nat,
+  cons n1 l1++snoc l2 n2 = snoc (cons n1 (l1++l2)) n2.
+Proof.
+  intros l1 l2 n1 n2. induction l1 as [|n1' l1'].
+  Case "l1=[]". simpl. reflexivity.
+  Case "l1=n1'::l1'".
+  simpl. 
+  rewrite->snoc_append. rewrite->snoc_append. rewrite->app_ass. 
+  reflexivity. Qed.
+
+Theorem count_member_nonzero : ∀s : bag,
+  ble_nat 1 (count 1 (1 :: s)) = true.
+Proof.
+  intros s. induction s as [|n l].
+  Case "s=[]". simpl. reflexivity.
+  Case "s=n::l". simpl. reflexivity. Qed.
+
+Theorem rev_nil: rev [] = [].
+Proof. simpl. reflexivity. Qed.
+
+(*
+Theorem rev_inj_conv :∀l1 l2:natlist,not (l1=l2)-> not (rev l1=rev l2).
+Proof.
+  intros l1 l2. induction l1 as [|n1 l1'].
+  Case "l1=[]". simpl. intros H. induction l2 as [|n2 l2']. rewrite->rev_nil.*)
+
+(* skipping this for now until I figure how to prove implication theorems *)
+
+Theorem rev_nil_inj : ∀l:natlist,rev l=[] -> l=[].
+Proof.
+ intros l.
+ induction l as [|n l']. 
+ reflexivity.
+ simpl. rewrite->snoc_append. rewrite->IHl'.
+ 
+
+Theorem rev_injective : ∀l1 l2 : natlist, rev l1 = rev l2 -> l1 = l2.
+Proof.
+  intros l1 l2 H. induction l1 as [|n1 l1'].
+  Case "l1=[]". simpl. induction l2 as [|n2 l2'].
+  SCase "l2=[]". reflexivity.
+  SCase "l2=n2::l2'". rewrite->IHl2'. simpl H. reflexivity. rewrite<-IHl2'. simpl. intros H. rewrite<-H. reflexivity.
+   rewrite<-IHl2'. rewrite->IHl2'.
+ Case "l1=n1::l1'".
 
