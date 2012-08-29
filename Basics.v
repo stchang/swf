@@ -612,6 +612,45 @@ Proof.
   reflexivity. 
 Qed.
 
+(** **** Exercise: 3 stars, optional *)
+Theorem bool_fn_applied_thrice : 
+  forall (f : bool -> bool) (b : bool), 
+  f (f (f b)) = f b.
+Proof.
+  intros f b.
+  destruct b.
+  Case "b = true".
+  remember (f true) as ftrue.
+    destruct ftrue.
+    SCase "f true = true".
+      rewrite <- Heqftrue.
+      symmetry.
+      apply Heqftrue.
+    SCase "f true = false".
+      remember (f false) as ffalse.
+      destruct ffalse.
+      SSCase "f false = true".
+        symmetry.
+        apply Heqftrue.
+      SSCase "f false = false".
+        symmetry.
+        apply Heqffalse.
+  remember (f false) as ffalse.
+    destruct ffalse.
+    SCase "f false = true".
+      remember (f true) as ftrue.
+      destruct ftrue.
+      SSCase "f true = true".
+        symmetry.
+        apply Heqftrue.
+      SSCase "f true = false".
+        symmetry.
+        apply Heqffalse.
+    SCase "f false = false".
+      rewrite <- Heqffalse.
+      symmetry.
+      apply Heqffalse.
+Qed.
 
 
 
